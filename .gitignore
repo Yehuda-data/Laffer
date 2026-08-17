@@ -1,0 +1,38 @@
+# This repository intentionally publishes only the dashboard and its runtime dependencies.
+*
+
+# Repository metadata and documentation
+!.gitignore
+!README.md
+!requirements.txt
+
+# Dashboard application
+!web_dashboard/
+!web_dashboard/**
+
+# Minimal Python model engine used by the dashboard
+!python_port/
+python_port/*
+!python_port/__init__.py
+!python_port/israel_two_calibrations.py
+!python_port/laffer_data.py
+!python_port/laffer_model.py
+!python_port/laffer_model_g.py
+!python_port/input/
+python_port/input/*
+!python_port/input/Israel_laffer_input_2005_2019.xlsx
+
+# Original calibration data parsed by python_port/laffer_data.py
+!LafferCodeWeb/
+LafferCodeWeb/*
+!LafferCodeWeb/1_BaselineCode/
+LafferCodeWeb/1_BaselineCode/*
+!LafferCodeWeb/1_BaselineCode/data.m
+
+# Python caches and local environments
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+.venv/
+.env
+.env.*

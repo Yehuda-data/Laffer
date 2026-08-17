@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trabandt–Uhlig Laffer Curve Lab</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/assets/plotly.min.js"></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <h1>Trabandt–Uhlig Laffer Curve Lab</h1>
+      <p>Interactive steady-state calibration and sensitivity analysis</p>
+    </div>
+    <span id="api-status" class="status-chip">Connecting…</span>
+  </header>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Model controls">
+      <section>
+        <h2>Presets</h2>
+        <div id="preset-buttons" class="preset-grid"></div>
+        <button id="custom-preset" class="secondary">Custom</button>
+      </section>
+
+      <section>
+        <h2>Model configuration</h2>
+        <label>Fiscal closure
+          <select id="closure">
+            <option value="s_laffer">s-Laffer — fixed g</option>
+            <option value="g_laffer">g-Laffer — fixed s</option>
+          </select>
+        </label>
+        <p id="closure-help" class="field-note"></p>
+        <label>Calibration
+          <select id="calibration">
+            <option value="external">External parameters</option>
+            <option value="model_implied">Model-implied parameters</option>
+          </select>
+        </label>
+        <label>Preference input
+          <select id="kappa_mode">
+            <option value="labor_target">Calibrate κ to n target</option>
+            <option value="kappa">Enter κ directly</option>
+          </select>
+        </label>
+      </section>
+
+      <section>
+        <h2>Taxes and preferences</h2>
+        <div class="field-grid">
+          <label>τ<sub>c</sub><input id="tau_c" type="number" step="0.001"></label>
+          <label>τ<sub>n</sub><input id="tau_n" type="number" step="0.001"></label>
+          <label>τ<sub>k</sub><input id="tau_k" type="number" step="0.001"></label>
+          <label>η<input id="eta" type="number" step="0.1"></label>
+          <label>φ (Frisch)<input id="phi" type="number" step="0.1"></label>
+          <label id="kappa-wrap">κ<input id="kappa" type="number" step="0.01"></label>
+          <label id="n-target-wrap">n target<input id="n_target" type="number" step="0.001"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Structural parameters</h2>
+        <div class="field-grid">
+          <label id="theta-wrap">θ<input id="theta" type="number" step="0.001"></label>
+          <label id="delta-wrap">δ<input id="delta" type="number" step="0.001"></label>
+          <label id="ky-wrap">k/y<input id="k_y" type="number" step="0.01"></label>
+          <label id="xy-wrap">x/y<input id="x_y" type="number" step="0.001"></label>
+          <label>R<input id="R" type="number" step="0.001"></label>
+          <label>ψ<input id="psi" type="number" step="0.001"></label>
+          <label>γ<input id="gamma" type="number" step="0.01"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Fiscal and external</h2>
+        <div class="field-grid">
+          <label>Debt/GDP<input id="debt_y" type="number" step="0.001"></label>
+          <label id="gy-wrap">g/GDP <span class="mini-badge">INPUT</span><input id="g_y" type="number" step="0.001"></label>
+          <label id="sy-wrap">s/GDP <span class="mini-badge">INPUT</span><input id="s_y" type="number" step="0.001"></label>
+          <label>Other waste/GDP<input id="other_waste_y" type="number" step="0.001"></label>
+        </div>
+        <label>External-balance convention
+          <select id="external_balance_convention">
+            <option value="net_imports">Net imports m/y</option>
+            <option value="trade_balance">Trade balance tb/y</option>
+          </select>
+        </label>
+        <label id="balance-value-label">Net imports m/y
+          <input id="external_balance_y" type="number" step="0.001">
+        </label>
+        <p id="balance-conversion" class="conversion"></p>
+      </section>
+
+      <section>
+        <h2>Tax grid</h2>
+        <div class="field-grid three">
+          <label>Min<input id="grid_min" type="number" step="0.01" value="0"></label>
+          <label>Max<input id="grid_max" type="number" step="0.01" value="0.99"></label>
+          <label>Step<input id="grid_step" type="number" step="0.001" value="0.001"></label>
+        </div>
+        <button id="recompute" class="primary">Recompute model</button>
+      </section>
+    </aside>
+
+    <main>
+      <div id="error-banner" class="error-banner hidden" role="alert"></div>
+      <section class="summary-section">
+        <div class="section-heading">
+          <div><h2>Baseline equilibrium</h2><p id="baseline-subtitle"></p></div>
+          <div class="button-row">
+            <button data-export="baseline" class="secondary">Download baseline CSV</button>
+            <button data-export="curve" class="secondary">Download curve CSV</button>
+          </div>
+        </div>
+        <div id="summary-cards" class="summary-cards"></div>
+        <div class="table-scroll"><table id="baseline-table"></table></div>
+      </section>
+
+      <section class="chart-section">
+        <div class="section-heading">
+          <h2>Laffer curves</h2>
+          <div class="button-row">
+            <select id="tax-chart-kind" aria-label="Tax curve kind">
+              <option value="labor">Labor-tax Laffer</option>
+              <option value="capital">Capital-tax Laffer</option>
+            </select>
+            <button id="download-chart" class="secondary">Download chart as PNG</button>
+          </div>
+        </div>
+        <div id="unsupported-capital" class="notice hidden">Capital-tax g-Laffer not yet implemented.</div>
+        <div class="chart-grid">
+          <div id="laffer-chart" class="chart"></div>
+          <div id="revenue-chart" class="chart"></div>
+          <div id="macro-chart" class="chart"></div>
+          <div id="fiscal-chart" class="chart"></div>
+        </div>
+      </section>
+
+      <section class="analysis-grid">
+        <details open>
+          <summary>Model diagnostics</summary>
+          <div id="diagnostics"></div>
+          <div id="curve-diagnostics"></div>
+        </details>
+        <details>
+          <summary>Model equations</summary>
+          <div id="equations"></div>
+        </details>
+      </section>
+
+      <section>
+        <div class="section-heading"><h2>Sensitivity analysis</h2><button data-export="sensitivity" class="secondary">Download sensitivity CSV</button></div>
+        <div class="sensitivity-controls">
+          <label>Parameter<select id="sensitivity-parameter"></select></label>
+          <label>Minimum<input id="sensitivity-min" type="number" step="0.01"></label>
+          <label>Maximum<input id="sensitivity-max" type="number" step="0.01"></label>
+          <label>Scenarios<input id="sensitivity-count" type="number" min="2" max="12" value="3"></label>
+          <button id="run-sensitivity" class="primary">Run sensitivity</button>
+        </div>
+        <div id="sensitivity-chart" class="chart wide"></div>
+      </section>
+
+      <section>
+        <div class="section-heading"><h2>Scenario comparison</h2><button data-export="comparison" class="secondary">Download comparison CSV</button></div>
+        <div class="button-row comparison-actions">
+          <button id="save-a" class="secondary">Save current as Scenario A</button>
+          <button id="save-b" class="secondary">Save current as Scenario B</button>
+          <button id="compare" class="primary">Compare A and B</button>
+          <span id="scenario-status" class="field-note">No scenarios saved.</span>
+        </div>
+        <div id="comparison-chart" class="chart wide"></div>
+        <div class="table-scroll"><table id="comparison-table"></table></div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
