@@ -4,9 +4,37 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Trabandt–Uhlig Laffer Curve Lab</title>
-  <link rel="stylesheet" href="/styles.css">
-  <script src="/assets/plotly.min.js"></script>
-  <script src="/app.js" defer></script>
+  <link rel="stylesheet" href="./styles.css">
+  <script>
+    (async () => {
+      const loadScript = source => new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = source;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error(`Failed to load ${source}`));
+        document.head.appendChild(script);
+      });
+      const onGitHubPages = window.location.hostname.endsWith(".github.io")
+        || new URLSearchParams(window.location.search).has("static");
+      await loadScript(onGitHubPages
+        ? "https://cdn.plot.ly/plotly-3.1.0.min.js"
+        : "/assets/plotly.min.js");
+      if (onGitHubPages) await loadScript("./static-model.js");
+      if (document.readyState === "loading") {
+        await new Promise(resolve => document.addEventListener("DOMContentLoaded", resolve, {once: true}));
+      }
+      await loadScript("./app.js");
+    })().catch(error => {
+      window.addEventListener("DOMContentLoaded", () => {
+        const status = document.getElementById("api-status");
+        if (status) {
+          status.textContent = "Loading failed";
+          status.className = "status-chip offline";
+          status.title = error.message;
+        }
+      }, {once: true});
+    });
+  </script>
 </head>
 <body>
   <header class="site-header">

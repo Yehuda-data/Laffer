@@ -31,6 +31,16 @@ Set-Location .\web_dashboard
 
 Open <http://127.0.0.1:8000/>. API documentation is available at <http://127.0.0.1:8000/docs>.
 
+## GitHub Pages
+
+The same interface can run entirely in the browser without a Python server. On
+GitHub Pages, `static-model.js` performs the steady-state calculations locally
+and no model inputs are sent to a backend. The Pages workflow publishes
+`web_dashboard/frontend` after every push to `main`.
+
+Enable **Settings → Pages → Source: GitHub Actions** in the GitHub repository.
+The public URL then has the form `https://<account>.github.io/<repository>/`.
+
 ## Test
 
 From the repository root:

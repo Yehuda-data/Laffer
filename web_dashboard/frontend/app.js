@@ -26,6 +26,7 @@ const fmt = (value, digits = 4) => finite(value) ? value.toLocaleString(undefine
 const pct = value => finite(value) ? `${(100 * value).toFixed(2)}%` : "N/A";
 
 async function api(path, options = {}) {
+  if (window.LafferStaticApi) return window.LafferStaticApi.request(path, options);
   const response = await fetch(path, {headers: {"Content-Type": "application/json"}, ...options});
   let data;
   try { data = await response.json(); } catch { data = {detail: response.statusText}; }
