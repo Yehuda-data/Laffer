@@ -99,6 +99,7 @@ tr:nth-child(even) td { background: #f7f9fa; }
 
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .chart { min-height: 390px; border: 1px solid #e1e6eb; background: white; }
+.chart.span-2 { grid-column: 1 / -1; min-height: 420px; }
 .chart.wide { min-height: 440px; margin-top: 15px; }
 .notice { padding: 13px; margin-bottom: 12px; color: #704800; background: #fff4d6; border-left: 4px solid #d4981a; }
 .error-banner { padding: 13px; margin-bottom: 15px; color: #7b1620; background: #feecee; border: 1px solid #e9aab0; }

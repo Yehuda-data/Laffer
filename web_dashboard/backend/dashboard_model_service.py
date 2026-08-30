@@ -484,13 +484,14 @@ def labor_curve(spec: ModelSpecification) -> dict[str, Any]:
                     point.setdefault("invalid_reasons", []).append("valid root is not connected to the baseline branch")
 
         base_total = base.get("T_total", math.nan)
-        for key in ("n", "y", "k", "c"):
+        for key in ("n", "y", "k", "c", "w"):
             denominator = base.get(key, math.nan)
             for point in points:
                 point[f"{key}_index"] = _safe_ratio(point.get(key, math.nan), denominator) * 100.0
         for point in points:
             for key in ("T_n", "T_k", "T_c", "T_total"):
                 point[f"{key}_index"] = _safe_ratio(point.get(key, math.nan), base_total) * 100.0
+            point["T_n_own_index"] = _safe_ratio(point.get("T_n", math.nan), base.get("T_n", math.nan)) * 100.0
 
         jumps: list[dict[str, float]] = []
         solver_failures: list[float] = []
@@ -551,8 +552,9 @@ def capital_curve(spec: ModelSpecification) -> dict[str, Any]:
     for point in points:
         for key in ("T_n", "T_k", "T_c", "T_total"):
             point[f"{key}_index"] = _safe_ratio(point.get(key, math.nan), base_total) * 100.0
-        for key in ("n", "y", "k", "c"):
+        for key in ("n", "y", "k", "c", "w"):
             point[f"{key}_index"] = _safe_ratio(point.get(key, math.nan), base.get(key, math.nan)) * 100.0
+        point["T_n_own_index"] = _safe_ratio(point.get("T_n", math.nan), base.get("T_n", math.nan)) * 100.0
     valid_points = [point for point in points if point.get("valid") and _finite(point.get("T_total_index"))]
     peak = max(valid_points, key=lambda point: point["T_total_index"]) if valid_points else None
     return json_safe({

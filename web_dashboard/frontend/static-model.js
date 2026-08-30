@@ -291,8 +291,9 @@
       points.forEach((item, index) => { item.valid = connected[index]; if (item.point_valid && !item.valid) item.invalid_reasons.push("valid root is not connected to the baseline branch"); });
     }
     for (const item of points) {
-      for (const key of ["n", "y", "k", "c"]) item[`${key}_index`] = safeRatio(item[key], base[key]) * 100;
+      for (const key of ["n", "y", "k", "c", "w"]) item[`${key}_index`] = safeRatio(item[key], base[key]) * 100;
       for (const key of ["T_n", "T_k", "T_c", "T_total"]) item[`${key}_index`] = safeRatio(item[key], base.T_total) * 100;
+      item.T_n_own_index = safeRatio(item.T_n, base.T_n) * 100;
     }
     const validPoints = points.filter(item => item.valid && finite(item.T_total_index));
     const peak = validPoints.reduce((best, item) => !best || item.T_total_index > best.T_total_index ? item : best, null);

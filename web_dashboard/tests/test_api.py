@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
+import pytest
 
 from backend.app import app
 
@@ -42,9 +43,28 @@ def test_labor_endpoint_and_equations():
     payload = response.json()
     assert payload["curve"]
     assert "peak_tax" in payload["summary"]
+    baseline_tax = payload["summary"]["baseline_tax"]
+    baseline_point = min(payload["curve"], key=lambda point: abs(point["tau_n"] - baseline_tax))
+    assert baseline_point["n_index"] == pytest.approx(100.0, abs=1e-7)
+    assert baseline_point["w_index"] == pytest.approx(100.0, abs=1e-7)
+    assert baseline_point["T_n_own_index"] == pytest.approx(100.0, abs=1e-7)
     equations = client.get("/api/equations/s_laffer")
     assert equations.status_code == 200
     assert equations.json()["equations"]
+
+
+def test_frontend_contains_chart_titles_and_labor_decomposition():
+    index = client.get("/").text
+    javascript = client.get("/app.js").text
+    assert 'id="labor-decomposition-chart"' in index
+    assert "-tax Laffer curve" in javascript
+    assert "Revenue decomposition" in javascript
+    assert "Macro response" in javascript
+    assert "Fiscal response" in javascript
+    assert "Labor-income tax revenue decomposition" in javascript
+    assert "T_n_own_index" in javascript
+    assert "n_index" in javascript
+    assert "w_index" in javascript
 
 
 def test_capital_g_endpoint_returns_501():

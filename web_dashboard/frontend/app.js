@@ -157,22 +157,34 @@ function renderCurve(data, kind = "labor") {
   const peakRevenue = summary.peak_revenue;
   const annotations = [];
   if (finite(peak) && finite(peakRevenue)) annotations.push({x: peak, y: peakRevenue, text: `Peak ${fmt(peak, 3)}<br>${fmt(peakRevenue, 2)}`, showarrow: true, arrowhead: 2});
+  const xTitle = kind === "labor" ? "τₙ" : "τₖ";
   Plotly.react("laffer-chart", [trace(points, xKey, "T_total_index", "Total tax revenue", colors.blue)], {
-    ...layoutBase, title: `${titleTax}-tax Laffer curve`, xaxis: {...layoutBase.xaxis, title: kind === "labor" ? "τₙ" : "τₖ"},
-    yaxis: {...layoutBase.yaxis, title: "Baseline total revenue = 100"}, annotations,
+    ...layoutBase, title: {text: `${titleTax}-tax Laffer curve`}, xaxis: {...layoutBase.xaxis, title: {text: xTitle}},
+    yaxis: {...layoutBase.yaxis, title: {text: "Baseline total revenue = 100"}}, annotations,
     shapes: finite(base) ? [{type: "line", x0: base, x1: base, y0: 0, y1: 1, yref: "paper", line: {color: "#555", dash: "dot"}}] : []
   }, plotConfig);
   Plotly.react("revenue-chart", [
     trace(points, xKey, "T_n_index", "Tₙ", colors.blue), trace(points, xKey, "T_k_index", "Tₖ", colors.red, "dash"),
     trace(points, xKey, "T_c_index", "T꜀", colors.green, "dot"), trace(points, xKey, "T_total_index", "Total", colors.black)
-  ], {...layoutBase, title: "Revenue decomposition", xaxis: {...layoutBase.xaxis, title: kind === "labor" ? "τₙ" : "τₖ"}, yaxis: {...layoutBase.yaxis, title: "Total baseline revenue = 100"}}, plotConfig);
+  ], {...layoutBase, title: {text: "Revenue decomposition"}, xaxis: {...layoutBase.xaxis, title: {text: xTitle}}, yaxis: {...layoutBase.yaxis, title: {text: "Total baseline revenue = 100"}}}, plotConfig);
   Plotly.react("macro-chart", [
     trace(points, xKey, "n_index", "n", colors.blue), trace(points, xKey, "y_index", "y", colors.red, "dash"),
     trace(points, xKey, "k_index", "k", colors.purple, "dot"), trace(points, xKey, "c_index", "c", colors.green, "dashdot")
-  ], {...layoutBase, title: "Macro response", xaxis: {...layoutBase.xaxis, title: kind === "labor" ? "τₙ" : "τₖ"}, yaxis: {...layoutBase.yaxis, title: "Own baseline = 100"}}, plotConfig);
+  ], {...layoutBase, title: {text: "Macro response"}, xaxis: {...layoutBase.xaxis, title: {text: xTitle}}, yaxis: {...layoutBase.yaxis, title: {text: "Own baseline = 100"}}}, plotConfig);
   Plotly.react("fiscal-chart", [
     trace(points, xKey, "g_y", "g/y", colors.blue), trace(points, xKey, "s_y", "s/y", colors.red, "dash"), trace(points, xKey, "T_total_y", "T/y", colors.green, "dot")
-  ], {...layoutBase, title: "Fiscal response", xaxis: {...layoutBase.xaxis, title: kind === "labor" ? "τₙ" : "τₖ"}, yaxis: {...layoutBase.yaxis, title: "Ratio to output"}}, plotConfig);
+  ], {...layoutBase, title: {text: "Fiscal response"}, xaxis: {...layoutBase.xaxis, title: {text: xTitle}}, yaxis: {...layoutBase.yaxis, title: {text: "Ratio to output"}}}, plotConfig);
+  const laborDecompositionChart = $("labor-decomposition-chart");
+  laborDecompositionChart.classList.toggle("hidden", kind !== "labor");
+  if (kind === "labor") {
+    Plotly.react("labor-decomposition-chart", [
+      trace(points, "tau_n", "n_index", "n — hours worked", colors.blue),
+      trace(points, "tau_n", "w_index", "w — wage", colors.purple, "dash"),
+      {...trace(points, "tau_n", "T_n_own_index", "Tₙ — total labor-income tax revenue", colors.red), line: {color: colors.red, width: 3.2}}
+    ], {...layoutBase, title: {text: "Labor-income tax revenue decomposition: Tₙ = τₙ · w · n"},
+      xaxis: {...layoutBase.xaxis, title: {text: "Labor-income tax rate τₙ"}},
+      yaxis: {...layoutBase.yaxis, title: {text: "Each series at baseline = 100"}}}, plotConfig);
+  }
 
   const diagnostics = [
     ["Valid τ range", summary.valid_tau_min == null ? "N/A" : `${fmt(summary.valid_tau_min, 3)}–${fmt(summary.valid_tau_max, 3)}`],
@@ -250,7 +262,7 @@ async function runSensitivity() {
       const points = scenario.result.curve || [];
       return {...trace(points, "tau_n", "T_total_index", scenario.label, [colors.blue, colors.red, colors.green, colors.purple, "#e08214"][index % 5]), connectgaps: false};
     });
-    Plotly.react("sensitivity-chart", traces, {...layoutBase, title: `Sensitivity: ${data.parameter}`, xaxis: {...layoutBase.xaxis, title: "τₙ"}, yaxis: {...layoutBase.yaxis, title: "Scenario baseline revenue = 100"}}, plotConfig);
+    Plotly.react("sensitivity-chart", traces, {...layoutBase, title: {text: `Sensitivity: ${data.parameter}`}, xaxis: {...layoutBase.xaxis, title: {text: "τₙ"}}, yaxis: {...layoutBase.yaxis, title: {text: "Scenario baseline revenue = 100"}}}, plotConfig);
   } catch (error) { showError(error.message); }
 }
 
@@ -266,7 +278,7 @@ async function runComparison() {
     state.comparison = data;
     const a = data.scenario_a.curve.curve || [], b = data.scenario_b.curve.curve || [];
     Plotly.react("comparison-chart", [trace(a, "tau_n", "T_total_index", "Scenario A", colors.blue), trace(b, "tau_n", "T_total_index", "Scenario B", colors.red, "dash")],
-      {...layoutBase, title: "Scenario A vs B", xaxis: {...layoutBase.xaxis, title: "τₙ"}, yaxis: {...layoutBase.yaxis, title: "Own baseline revenue = 100"}}, plotConfig);
+      {...layoutBase, title: {text: "Scenario A vs B"}, xaxis: {...layoutBase.xaxis, title: {text: "τₙ"}}, yaxis: {...layoutBase.yaxis, title: {text: "Own baseline revenue = 100"}}}, plotConfig);
     const rowsA = data.scenario_a.key_rates, rowsB = data.scenario_b.key_rates;
     $("comparison-table").innerHTML = `<thead><tr><th>τₙ</th><th>A: n</th><th>B: n</th><th>A: T index</th><th>B: T index</th></tr></thead><tbody>${rowsA.map((row, index) => `<tr><td>${row.tau_n.toFixed(2)}</td><td>${fmt(row.n)}</td><td>${fmt(rowsB[index].n)}</td><td>${fmt(row.T_total_index)}</td><td>${fmt(rowsB[index].T_total_index)}</td></tr>`).join("")}</tbody>`;
   } catch (error) { showError(error.message); }
